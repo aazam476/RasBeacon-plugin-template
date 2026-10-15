@@ -1,0 +1,26 @@
+{
+  "id": "hello-world",
+  "name": "Hello World",
+  "version": "1.0.0",
+  "description": "A web page on your hotspot that says what you tell it to.",
+  "author": "Your name",
+  "homepage": "https://github.com/aazam476/RasBeacon-plugin-template",
+  "ports": [{ "name": "Web page", "container": 8080, "open": true }],
+  "memoryMb": 16,
+  "cpus": 0.1,
+  "storageMb": 16,
+  "volumes": [{ "name": "site", "path": "/www" }],
+  "settings": [
+    {
+      "key": "message",
+      "label": "Message",
+      "type": "text",
+      "default": "Hello from RasBeacon!",
+      "required": true,
+      "help": "What the page says."
+    }
+  ],
+  "templates": [{ "file": "index.html", "path": "/www/index.html" }],
+  "afterInstall": "Open it with the Open button, or go to http://{host}:{port:8080}/ from a device on your hotspot.",
+  "health": { "url": "http://{address}:8080/" }
+}
