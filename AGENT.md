@@ -29,8 +29,8 @@ Argon ONE V2: Go program + I²C + GPIO + power socket).
 
 ```
 plugins/<id>/manifest.json   required: the manifest (below)
-plugins/<id>/icon.png        required: PNG, square, 256×256, at most 512 KB
-plugins/<id>/README.md       optional, at most 64 KB: shown on its page
+plugins/<id>/icon.png        required: a square PNG, 128×128 to 1024×1024 (make it 256×256), at most 512 KB
+plugins/<id>/README.md       optional, at most 64 KB: shown on its page (Markdown: paragraphs, lists, **bold**, *italic*, `code`, links)
 plugins/<id>/Containerfile   when the image is built here (then no "image" in the manifest)
 plugins/<id>/templates/*     optional: files named in "templates"
 plugins/<id>/...             anything the Containerfile copies (sources, scripts)
@@ -70,9 +70,9 @@ A zip archive (renamed `.rba`), at most 2 GB, holding only these entries:
 | Entry | Rules |
 |---|---|
 | `manifest.json` | required; at most 64 KB |
-| `icon.png` | required; must be a PNG; at most 512 KB |
+| `icon.png` | required; a PNG, square, 128×128 to 1024×1024; at most 512 KB |
 | `README.md` | optional; at most 64 KB |
-| `image.tar` | the container image (`docker save` output, arm64) — exactly when the manifest has no `image` |
+| `image.tar` | the container image (`docker save` output, arm64), at most 4 GB unpacked — exactly when the manifest has no `image` |
 | `templates/<file>` | at most 20 files, 256 KB each; names `^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$`; every template the manifest lists must be there |
 | `signature` | optional; written by `rbsign plugin-sign` |
 
@@ -85,69 +85,75 @@ Any other entry (or folder other than `templates/`) is refused.
 
 ## manifest.json
 
-JSON; unknown fields are refused. All fields:
+JSON, one object and nothing after it; unknown fields are refused. Texts
+are counted in characters; names and labels must be one line. All fields:
 
 | Field | Type | Rules |
 |---|---|---|
 | `id` | string | required; `^[a-z0-9][a-z0-9-]{0,30}[a-z0-9]$` (2–32); never change it after release |
-| `name` | string | required; 1–40 characters |
+| `name` | string | required; 1–40 characters, one line |
 | `version` | string | required; 1–40 characters, no spaces or `/`; RasBeacon offers an update when it is newer (numbers compared in order: `1.10.0` > `1.9.2`) |
 | `description` | string | at most 300 characters |
-| `author` | string | shown to the owner |
+| `author` | string | at most 100 characters, one line |
 | `homepage` | string | must start `https://` |
 | `boards` | string[] | `pi5`, `pi4`, `pi3`, `zero2w`; empty = all |
-| `image` | object | `{ "ref": "registry/owner/name:tag", "digest": "sha256:<64 hex>" }`; no `@` in ref; only when there is no `image.tar`/Containerfile |
+| `image` | object | `{ "ref": "registry/owner/name:tag", "digest": "sha256:<64 hex>" }`; the ref starts with its registry (`docker.io/…`, `ghcr.io/…`) and has no `@`; only when there is no `image.tar`/Containerfile |
 | `permissions` | string[] | from: `internet`, `lan-access`, `usb-drive`, `i2c`, `gpio`, `power-button`, `temperature` |
-| `ports` | object[] | `name` (required), `container` (1–65535), `protocol` (`tcp` default, or `udp`), `default` (suggested port on RasBeacon; default = container), `open` (Open button for a web page), `https` (open with https://); no repeats |
+| `ports` | object[] | `name` (required, at most 40 characters), `container` (1–65535), `protocol` (`tcp` default, or `udp`), `default` (suggested port on RasBeacon, 1–65535; default = container), `open` (Open button for a web page), `https` (open with https://); no repeats |
 | `memoryMb` | int | limit; default 256; at most 8192 |
 | `cpus` | number | limit in cores; default 0.5; at most 4 |
 | `minMemoryMb`, `minSwapMb` | int | refuse install on a Pi with less memory / swap |
 | `storageMb` | int | size of its data file, shared by all volumes; default 256; at most 65536 |
-| `volumes` | object[] | `name` (`^[a-z0-9][a-z0-9-]{0,30}$`, unique), `path` (absolute, not `/`, no `..`, `:`, `,`) |
+| `volumes` | object[] | `name` (`^[a-z0-9][a-z0-9-]{0,30}$`, unique), `path` (absolute, not `/`, no `..`, `:`, `,`; unique) |
 | `usbDrive` | object | `path` (absolute), `optional` (bool); required together with the `usb-drive` permission |
-| `env` | object | fixed environment variables; names `^[A-Z_][A-Z0-9_]{0,63}$` |
+| `env` | object | fixed environment variables; names `^[A-Z_][A-Z0-9_]{0,63}$`, values one line |
 | `command` | string[] | replaces the image's command |
 | `settings` | object[] | see below |
-| `templates` | object[] | `file` (in `templates/`), `path` (in the container, inside a volume), `once` (write only if missing) |
+| `templates` | object[] | `file` (in `templates/`), `path` (a file in the container, inside a volume), `once` (write only if missing) |
 | `afterInstall` | string | at most 1000 characters; placeholders allowed |
 | `metrics` | object[] | at most 4; see below |
-| `health` | object | `url` starting `http://{address}`; healthy when it answers below 500 |
+| `health` | object | `url`: `http://{address}`, then optionally `:port` and a path; healthy when it answers below 500 |
 
 ### settings
 
 | Field | Rules |
 |---|---|
 | `key` | required; `^[A-Za-z][A-Za-z0-9_]{0,39}$`, unique |
-| `label` | required |
+| `label` | required; at most 40 characters, one line |
 | `type` | `text`, `password`, `number`, `switch`, `select` |
-| `help`, `unit` | shown with the field |
+| `help`, `unit` | shown with the field; at most 300 and 20 characters |
 | `default` | must itself pass the checks below |
 | `required` | refuse an empty value |
-| `options` | for `select`: `[{ "value": "…", "label": "…" }]`, required |
-| `min`, `max` | for `number` |
+| `options` | for `select`: `[{ "value": "…", "label": "…" }]`, required; values distinct and one line, labels at most 60 characters |
+| `min`, `max` | for `number`; `min` not above `max` |
 | `env` | environment variable that gets the value; `^[A-Z_][A-Z0-9_]{0,63}$` |
 
-Values are one line, at most 1000 characters. `number` must parse as a number
-within `min`/`max`; `switch` is `"true"` or `"false"`; `select` must be one of
-the options. `password` values are kept in RasBeacon's secrets, never shown
-again; an empty field on a later save keeps the saved one.
+Values are one line, at most 1000 characters. `number` must parse as a
+(finite) number within `min`/`max`; `switch` is `"true"` or `"false"`;
+`select` must be one of the options. Values are trimmed, except passwords,
+which are kept exactly as typed in RasBeacon's secrets and never shown
+again; an empty password field on a later save keeps the saved one.
 
 ### templates
 
 Go `text/template`, rendered before every start (unless `once` and the file
-exists), written into the volume holding `path`. Data and functions:
+exists), written into the volume holding `path`, while the container is
+stopped. RasBeacon never writes through a symbolic link: if a folder on the
+path is a link the plugin made, the plugin doesn't start (a link at the file
+itself is replaced). A filled-in file is at most 4 MB. Data and functions:
 
 - `.Settings.<key>`: every setting's value, passwords included
 - `.Address`: the plugin's address; `.Host`: RasBeacon's address on the hotspot
 - `port 3000`: the port on RasBeacon chosen for container port 3000
-- `bcrypt <value>`: a bcrypt hash; `json <value>`: a JSON-quoted string (safe as a YAML/JSON scalar); `html <value>`: HTML-escaped (Go built-in)
+- `bcrypt <value>`: a bcrypt hash (at most 10 per template); `json <value>`: a JSON-quoted string (safe as a YAML/JSON scalar); `html <value>`: HTML-escaped (Go built-in)
 
 A missing key renders empty.
 
 ### metrics
 
-`label` and `path` required; `url` must start `http://{address}`. `path` is
-dotted into the JSON answer (`a.b.0`). `divideBy` is another path (the metric
+`label` (at most 30 characters) and `path` required; `url` is
+`http://{address}`, then optionally `:port` and a path, nothing else
+(redirects aren't followed). `path` is dotted into the JSON answer (`a.b.0`). `divideBy` is another path (the metric
 becomes path / divideBy). `format`: `number` (default, rounded with
 thousands separators), `percent` (0–1 → `12.3%`), `bytes`, `ms`, `seconds`,
 `text`. `scale` multiplies first. `username` / `password` add Basic
@@ -173,9 +179,11 @@ as written.
 - No privileges, `no-new-privileges`, at most 512 processes, the memory and
   CPU limits. `/sys/class/thermal` and `/sys/class/hwmon` hidden without
   `temperature`. `/dev/i2c-*` with `i2c`, `/dev/gpiochip*` with `gpio`.
-- With `power-button`: `RASBEACON_SOCKET` (a Unix socket); `POST /power`
-  with `{"action":"shutdown"}` or `{"action":"reboot"}` → 204.
-- Output (stdout/stderr) is its log on its page (last 500 lines).
+- With `power-button`: `RASBEACON_SOCKET` (a Unix socket, usable by root in
+  the container); `POST /power` with `{"action":"shutdown"}` or
+  `{"action":"reboot"}` → 204.
+- Output (stdout/stderr) is its log on its page (last 500 lines; 256 KB kept,
+  in memory).
 - RasBeacon restarts it when settings are saved. If it exits by itself it is
   started again; after 5 crashes in a row it is stopped until the owner
   starts it.
