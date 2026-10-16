@@ -97,6 +97,7 @@ are counted in characters; names and labels must be one line. All fields:
 | `author` | string | at most 100 characters, one line |
 | `homepage` | string | must start `https://` |
 | `boards` | string[] | `pi5`, `pi4`, `pi3`, `zero2w`; empty = all |
+| `minRasBeacon` | string | oldest RasBeacon it works with, 1–3 numbers (`0.2.0`); empty = any; older RasBeacons refuse it. Set it only when the plugin uses something a newer RasBeacon added |
 | `image` | object | `{ "ref": "registry/owner/name:tag", "digest": "sha256:<64 hex>" }`; the ref starts with its registry (`docker.io/…`, `ghcr.io/…`) and has no `@`; only when there is no `image.tar`/Containerfile |
 | `permissions` | string[] | from: `internet`, `lan-access`, `usb-drive`, `i2c`, `gpio`, `power-button`, `temperature` |
 | `ports` | object[] | `name` (required, at most 40 characters), `container` (1–65535), `protocol` (`tcp` default, or `udp`), `default` (suggested port on RasBeacon, 1–65535; default = container), `open` (Open button for a web page), `https` (open with https://); no repeats |
@@ -228,6 +229,7 @@ as written.
   only takes the entries listed above.
 - Keep `tools/` and `.github/workflows/` working for every plugin; CI builds
   and checks all of them on each push.
-- Releases: Actions → Release → Run workflow with a tag like `v1.2.0`, or push
-  that tag. The release must be signed (the workflow fails without the
-  secret).
+- Releases: Actions → Release → Run workflow with a tag named after the
+  RasBeacon version the plugins are for (`v0.1.0`, `v0.1.1`, … for RasBeacon
+  0.1), or push that tag. The release must be signed (the workflow fails
+  without the secret).
