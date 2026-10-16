@@ -227,6 +227,10 @@ mounts it so nothing on it can run, and gives it to one plugin only. With
 program (no special libraries needed). Limit the plugin to the boards it
 supports with `"boards": ["pi4"]` (`pi5`, `pi4`, `pi3`, `zero2w`).
 
+If your plugin uses something only a newer RasBeacon has, add
+`"minRasBeacon": "0.2.0"` (the version that added it). Older RasBeacons then
+show it as *Needs RasBeacon 0.2.0 or newer* instead of failing to install it.
+
 With `power-button`, the environment variable `RASBEACON_SOCKET` names a
 socket: send `POST /power` with `{"action": "shutdown"}` (or `"reboot"`).
 Only root in the container can use it.
@@ -252,7 +256,9 @@ Plugins can't change RasBeacon's settings; say what the owner should change.
    `RASBEACON_PLUGIN_SIGNING_KEY`, and never change it (RasBeacon accepts
    updates only with the same key).
 2. Bump `version` in the manifest of every plugin you changed.
-3. Actions → Release → Run workflow, with a version name like `v1.0.0`.
+3. Actions → Release → Run workflow, with a release name like `v0.1.0`
+   (named after the RasBeacon version it's for: `v0.1.0`, `v0.1.1`, … for
+   RasBeacon 0.1).
 4. On RasBeacon, add your repository as a source (Plugins → Browse plugins →
    Sources); your plugins appear in the catalog.
 

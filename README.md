@@ -51,13 +51,17 @@ On RasBeacon, open **Plugins → Install from a file**, choose
    repository secret `RASBEACON_PLUGIN_SIGNING_KEY` (Settings → Secrets and
    variables → Actions). Keep the same key forever: RasBeacon accepts updates
    only when they are signed with the key of the installed version.
-2. **Publish a release:** Actions → Release → Run workflow, with a version
-   name such as `v1.0.0`. It builds, signs and publishes every plugin.
+2. **Publish a release:** Actions → Release → Run workflow, with a release
+   name such as `v0.1.0`. It builds, signs and publishes every plugin. Name
+   releases after the RasBeacon version they're for (`v0.1.0`, `v0.1.1`, …
+   for RasBeacon 0.1), as RasBeacon's own plugins do; RasBeacon itself only
+   reads the newest release, whatever its name.
 3. **Use it:** on RasBeacon, add your repository under **Plugins → Browse
    plugins → Sources** as `owner/repository`.
 
 Bump a plugin's `version` whenever it changes: RasBeacon offers an update
-only for a newer version.
+only for a newer version. If a plugin uses something only a newer RasBeacon
+has, set `minRasBeacon` in its manifest (like `"0.2.0"`).
 
 ## License
 
