@@ -90,10 +90,11 @@ restarts and the page shows it.
 2. In `manifest.json`, set `id` (2 to 32 lowercase letters, digits and
    dashes; it never changes once people install it), `name`, `version`,
    `description`, `author` and `homepage`.
-3. Draw a square icon (256×256 PNG) as `icon.png`. Keep its source (SVG) in
-   `icons/`.
+3. Draw a square icon (256×256 PNG; RasBeacon takes 128×128 to 1024×1024)
+   as `icon.png`. Keep its source (SVG) in `icons/`.
 4. Write `README.md`: what it does and how to use it. RasBeacon shows it on
-   the plugin's page.
+   the plugin's page, with Markdown's paragraphs, lists, **bold**, *italic*,
+   `code` and links.
 5. Replace the `Containerfile` with your program's. Images must run on
    `linux/arm64`, and should be small: RasBeacon may run on a Raspberry Pi
    Zero 2 W with 512 MB of memory. Pin base images to a version.
@@ -119,8 +120,14 @@ A setting reaches your program two ways:
   and JSON), and Go's own `html`. Add `"once": true` to write the file only
   the first time, when your program changes it later itself.
 
-`password` settings are kept with RasBeacon's secrets and never shown again;
-an empty field keeps the saved one.
+`password` settings are kept with RasBeacon's secrets, exactly as typed, and
+never shown again; an empty field keeps the saved one.
+
+Templates are written into your volumes before each start, while your
+container is stopped. RasBeacon never writes through a symbolic link your
+program made there: if a folder on a template's path is a link, the plugin
+doesn't start. A template may call `bcrypt` at most 10 times, and a filled-in
+file may be at most 4 MB.
 
 - *Samba* uses `env` for its share name, username and password
   ([manifest](https://github.com/aazam476/RasBeacon-plugins/blob/main/plugins/samba/manifest.json)).
@@ -173,7 +180,11 @@ reads them every 30 seconds from your program's own HTTP API:
 `path` picks a value from the JSON answer (`a.b.0` for nested values and
 lists). Formats: `number`, `percent` (0 to 1), `bytes`, `ms`, `seconds`,
 `text`; `scale` multiplies first. `username` and `password` add a login
-(placeholders like `{setting:password}` work).
+(placeholders like `{setting:password}` work). A `label` has at most 30
+characters.
+
+The URLs reach only your plugin: `http://{address}`, then optionally a port
+and a path, nothing else (RasBeacon doesn't follow redirects either).
 
 `health` is a URL that answers below 500 when the plugin works; its page says
 *Not answering* otherwise.
@@ -218,6 +229,7 @@ supports with `"boards": ["pi4"]` (`pi5`, `pi4`, `pi3`, `zero2w`).
 
 With `power-button`, the environment variable `RASBEACON_SOCKET` names a
 socket: send `POST /power` with `{"action": "shutdown"}` (or `"reboot"`).
+Only root in the container can use it.
 
 - *Argon ONE V2* reads the temperature, drives the case's fan over I²C,
   watches the power button on GPIO 4, and asks RasBeacon to restart or shut
