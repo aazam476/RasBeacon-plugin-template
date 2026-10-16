@@ -1,4 +1,4 @@
-# RasBeacon plugin template
+# <img src=".github/logo.svg" alt="" height="32"> RasBeacon plugin template
 
 Start here to make plugins for [RasBeacon](https://github.com/aazam476/RasBeacon),
 the Raspberry Pi travel router. Click **Use this template** to get your own
