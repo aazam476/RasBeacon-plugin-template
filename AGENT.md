@@ -222,6 +222,9 @@ as written.
 - Bump `version` in a plugin's manifest whenever anything in that plugin
   changes, or RasBeacon won't offer the update.
 - Never change a released plugin's `id`.
+- Commit messages start with a type prefix and no scope: `feat:`, `fix:`,
+  `chore:`, `refactor:`, `docs:`, `style:` or `test:` (`docs: explain
+  volumes`, not `docs(guide): explain volumes`). See CONTRIBUTING.md.
 - Never create, print, store or commit a private signing key. The owner makes
   it with `tools/rbsign.sh plugin-keygen` and stores it as the repository
   secret `RASBEACON_PLUGIN_SIGNING_KEY`; only the Release workflow uses it.
