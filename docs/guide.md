@@ -117,8 +117,10 @@ A setting reaches your program two ways:
   (RasBeacon's address on the hotspot), `{{port 3000}}` (the port on
   RasBeacon chosen for container port 3000), `{{bcrypt .Settings.password}}`
   (a password hash), `{{json .Settings.key}}` (a quoted string, safe in YAML
-  and JSON), and Go's own `html`. Add `"once": true` to write the file only
-  the first time, when your program changes it later itself.
+  and JSON), Go's own `html`, and `{{if}}`/`{{with}}`. RasBeacon refuses
+  `range`, `define`, `template` and `block`, which could make filling in a
+  template take hours. Add `"once": true` to write the file only the first
+  time, when your program changes it later itself.
 
 `password` settings are kept with RasBeacon's secrets, exactly as typed, and
 never shown again; an empty field keeps the saved one.
